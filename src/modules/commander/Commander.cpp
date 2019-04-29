@@ -4094,7 +4094,7 @@ void Commander::battery_status_check()
 
 void Commander::airspeed_use_check()
 {
-	if (_airspeed_fail_action.get() < 1 || _airspeed_fail_action.get() > 4) {
+	if (_tas_fs_action.get() < 1 || _tas_fs_action.get() > 4) {
 		// disabled
 		return;
 	}
@@ -4239,12 +4239,12 @@ void Commander::airspeed_use_check()
 		}
 	}
 
-	// Do actions based on value of COM_ASPD_FS_ACT parameter
+	// Do actions based on value of COM_TAS_FS_ACT parameter
 	status.aspd_fault_declared = false;
 	status.aspd_use_inhibit = false;
 	status.aspd_fail_rtl = false;
 
-	switch (_airspeed_fail_action.get()) {
+	switch (_tas_fs_action.get()) {
 	case 4: { // log a message, warn the user, switch to non-airspeed TECS mode, switch to Return mode if not in a pilot controlled mode.
 			if (fault_declared) {
 				status.aspd_fault_declared = true;
@@ -4260,10 +4260,10 @@ void Commander::airspeed_use_check()
 					// don't RTL if pilot is in control
 					mavlink_log_critical(&mavlink_log_pub, "ASPD DATA %s - stopping use", _airspeed_fault_type);
 
-				} else if (hrt_elapsed_time(&_time_tas_good_declared) < (_airspeed_rtl_delay.get() * 1_s)) {
+				} else if (hrt_elapsed_time(&_time_tas_good_declared) < (_tas_fs_rtl_delay.get() * 1_s)) {
 					// Wait for timeout and issue message
 					mavlink_log_critical(&mavlink_log_pub, "ASPD DATA %s - stopping use, RTL in %i sec", _airspeed_fault_type,
-							     _airspeed_rtl_delay.get());
+							     _tas_fs_rtl_delay.get());
 
 				} else if (TRANSITION_DENIED != main_state_transition(status, commander_state_s::MAIN_STATE_AUTO_RTL, status_flags,
 						&internal_state)) {
@@ -4271,7 +4271,7 @@ void Commander::airspeed_use_check()
 					// Issue critical message even if already in RTL
 					status.aspd_fail_rtl = true;
 
-					if (_airspeed_rtl_delay.get() == 0) {
+					if (_tas_fs_rtl_delay.get() == 0) {
 						mavlink_log_critical(&mavlink_log_pub, "ASPD DATA %s - stopping use and returning", _airspeed_fault_type);
 
 					} else {
@@ -4281,7 +4281,7 @@ void Commander::airspeed_use_check()
 				} else {
 					status.aspd_fail_rtl = true;
 
-					if (_airspeed_rtl_delay.get() == 0) {
+					if (_tas_fs_rtl_delay.get() == 0) {
 						mavlink_log_critical(&mavlink_log_pub, "ASPD DATA %s - stopping use, return failed", _airspeed_fault_type);
 
 					} else {
